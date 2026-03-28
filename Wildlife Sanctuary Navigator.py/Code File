@@ -1,0 +1,122 @@
+import networkx as nx
+import matplotlib.pyplot as plt
+import math
+
+# 1. Landmarks 
+locations = {
+    'Park_Entrance': (10, 5),
+    'Forest_Exit': (95, 70),
+    'Sunset_Point': (25, 30),
+    'River_Bank': (60, 15),
+    'Research_Center': (88, 20),
+    'Food_Court': (20, 55),
+    'Lake_View': (60, 45),
+    'Hilltop_View': (50, 85),
+    'Grassland_Field': (75, 95),
+    'Visitor_Center': (45, 10),
+    'First_Aid_Post': (40, 60),
+
+    # Camp Area
+    'Ranger_Station': (30, 75),
+    'Camp_Site_A': (15, 92),
+    'Camp_Site_B': (5, 80),
+    'Camp_Site_C': (12, 65),
+    'Camp_Site_D': (35, 88),
+
+    #  Wildlife Zones 
+    'Tiger_Zone': (70, 60),
+    'Elephant_Corridor': (80, 40),
+    'Deer_Park': (55, 55),
+    'Bird_Sanctuary': (35, 50),
+    'Crocodile_Point': (65, 25)
+}
+
+G = nx.Graph()
+for node, pos in locations.items():
+    G.add_node(node, pos=pos)
+
+# 2. Paths (Extended to include wildlife zones)
+paths = [
+    ('Park_Entrance', 'Sunset_Point', 400, 'flat'),
+    ('Sunset_Point', 'Food_Court', 300, 'flat'),
+    ('Food_Court', 'Ranger_Station', 180, 'flat'),
+    ('Ranger_Station','First_Aid_Post',100,'flat'),
+    ('First_Aid_Post','Hilltop_View',180,'flat'),
+    ('Visitor_Center','Lake_View',250,'flat'),
+    ('Sunset_Point','Visitor_Center',350,'flat'),
+    ('Lake_View','Grassland_Field',600,'flat'),
+    ('Lake_View','Forest_Exit',550,'flat'),
+    ('Visitor_Center','River_Bank',100,'stairs'),
+    ('Research_Center','Forest_Exit',350,'flat'),
+
+    # Camp connections
+    ('Ranger_Station', 'Camp_Site_A', 80, 'stairs'),
+    ('Ranger_Station', 'Camp_Site_B', 90, 'flat'),
+    ('Ranger_Station', 'Camp_Site_C', 70, 'flat'),
+    ('Ranger_Station', 'Camp_Site_D', 85, 'stairs'),
+
+    # Inter-camp shortcuts
+    ('Camp_Site_A', 'Camp_Site_B', 50, 'flat'),
+    ('Camp_Site_C', 'Food_Court', 80, 'flat'),
+
+    # Park internal connections
+    ('Research_Center', 'River_Bank', 130, 'flat'),
+    ('Research_Center', 'Lake_View', 100, 'flat'),
+    ('River_Bank', 'Lake_View', 120, 'stairs'),
+    ('Camp_Site_D', 'Hilltop_View', 220, 'flat'),
+    ('Hilltop_View', 'Grassland_Field', 90, 'flat'),
+    ('Visitor_Center', 'First_Aid_Post', 400, 'flat'),
+    ('Hilltop_View', 'Visitor_Center', 150, 'flat'),
+
+    #  Wildlife connections
+    ('Lake_View', 'Tiger_Zone', 200, 'flat'),
+    ('Tiger_Zone', 'Elephant_Corridor', 180, 'flat'),
+    ('Elephant_Corridor', 'Crocodile_Point', 150, 'flat'),
+    ('Deer_Park', 'Lake_View', 100, 'flat'),
+    ('Bird_Sanctuary', 'Food_Court', 90, 'flat'),
+    ('Deer_Park', 'Tiger_Zone', 140, 'flat'),
+    ('Bird_Sanctuary', 'Deer_Park', 110, 'flat')
+]
+
+for u, v, w, t in paths:
+    weight = w * 1.5 if t == 'stairs' else w
+    G.add_edge(u, v, weight=weight, type=t)
+
+# 3. A* Logic
+def heuristic_dist(u, v):
+    x1, y1 = locations[u]
+    x2, y2 = locations[v]
+    return math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
+
+start_point = input("Start_point: ")
+end_point = input("End_point: ")
+
+path = nx.astar_path(G, start_point, end_point, heuristic=heuristic_dist, weight='weight')
+path_length = nx.astar_path_length(G, start_point, end_point, heuristic=heuristic_dist, weight='weight')
+
+# 4. Visualization
+plt.figure(num="Wildlife Sanctuary Route Planner", figsize=(12, 10))
+pos = nx.get_node_attributes(G, 'pos')
+
+# Nodes
+nx.draw_networkx_nodes(G, pos, node_size=1200, node_color='lightgreen')
+nx.draw_networkx_labels(G, pos, font_size=8, font_weight='bold')
+
+# Edges
+flat_edges = [(u, v) for u, v, d in G.edges(data=True) if d['type'] == 'flat']
+stair_edges = [(u, v) for u, v, d in G.edges(data=True) if d['type'] == 'stairs']
+
+nx.draw_networkx_edges(G, pos, edgelist=flat_edges, alpha=0.4, edge_color='darkgreen', label='Trail')
+nx.draw_networkx_edges(G, pos, edgelist=stair_edges, alpha=0.6, edge_color='brown', style='dashed', label='Steep Trail')
+
+# Highlight path
+path_edges = list(zip(path, path[1:]))
+nx.draw_networkx_nodes(G, pos, nodelist=path, node_color='yellow', node_size=1500)
+nx.draw_networkx_edges(G, pos, edgelist=path_edges, edge_color='blue', width=4, label='Best Route')
+
+# Title
+plt.title(f"Wildlife Sanctuary Navigator \n{start_point} → {end_point} | Distance: {path_length:.2f}m", fontsize=14)
+
+plt.legend(scatterpoints=1, loc='best', fontsize=10)
+plt.axis('off')
+plt.show()
