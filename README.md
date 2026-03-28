@@ -78,6 +78,7 @@ Example:
 
 Start_point: Park_Entrance
 End_point: Tiger_Zone
+
 Output
 A graphical window showing the sanctuary map and optimal route
 Console output displaying:
