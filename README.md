@@ -1,3 +1,5 @@
+WILDLIFE SANCTUARY NAVIGATOR
+
 Overview
 Navigating large wildlife sanctuaries is difficult due to uneven terrain and restricted animal areas. Traditional maps do not consider factors like path difficulty or safety zones.
 This project represents the sanctuary as a state-space graph, where:
